@@ -47,6 +47,7 @@ npm run dev
 | /api/rooms | POST | Kreiranje nove sobe |
 |---|---|---|
 | /api/game | GET | Dohvaćanje odigranih igara |
+| /api/game/me | GET | Dohvaćanje personaliziranih odigranih igara |
 | /api/game/:id | GET | Dohvaćanje odigrane igre po ID-u |
 | /api/game | POST | Kreiranje nove igre |
 | /api/game/:id | PUT | Ažuriranje igre po ID-u |

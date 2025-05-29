@@ -74,6 +74,7 @@ pub fn main() !void {
     router.get("api/rooms", room.getRooms, .{});
     router.post("api/rooms", room.createRoom, .{});
     router.get("/api/game", game.getGames, .{});
+    router.get("/api/game/me", game.getPersonalGames, .{});
     router.get("/api/game/:id", game.getGame, .{});
     router.post("/api/game", game.createGame, .{});
     router.put("/api/game/:id", game.updateGame, .{});

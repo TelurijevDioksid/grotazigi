@@ -1,12 +1,15 @@
 const std = @import("std");
 const httpz = @import("httpz");
 const hlr = @import("../handler.zig");
+const jwt = @import("../helpers/jwt.zig");
 const UUID = @import("../helpers/uuid.zig").UUID;
 const GameDto = @import("../models/game.zig").GameDto;
 const CreateGameDto = @import("../models/game.zig").CreateGameDto;
 const UpdateGameDto = @import("../models/game.zig").UpdateGameDto;
+const JwtPayload = @import("../models/user.zig").JwtPayload;
 
 const Handler = hlr.Handler;
+const base64url = std.base64.url_safe_no_pad;
 
 pub fn getGames(handler: *Handler, _: *httpz.Request, res: *httpz.Response) !void {
     const conn = try handler.pool.acquire();
@@ -16,6 +19,39 @@ pub fn getGames(handler: *Handler, _: *httpz.Request, res: *httpz.Response) !voi
         "select wu.name as winner, lu.name as loser, g.pointswinner, g.pointsloser from games g " ++
         "join users wu on g.winner = wu.id join users lu on g.loser = lu.id",
         .{}, .{ .column_names = true });
+    defer result.deinit();
+
+    var mapper = result.mapper(GameDto, .{});
+    var games = std.ArrayList(GameDto).init(res.arena);
+
+    while (try mapper.next()) |game| {
+        try games.append(game);
+    }
+
+    try res.json(games.items, .{});
+}
+
+pub fn getPersonalGames(handler: *Handler, req: *httpz.Request, res: *httpz.Response) !void {
+    const conn = try handler.pool.acquire();
+    defer handler.pool.release(conn);
+
+    const token = req.cookies().get("auth") orelse {
+        res.status = 401;
+        return;
+    };
+
+    const key = try res.arena.alloc(u8, try base64url.Decoder.calcSizeForSlice(handler.jwt_secret));
+    try base64url.Decoder.decode(key, handler.jwt_secret);
+
+    const claims_p = jwt.validate(JwtPayload, res.arena, .HS256, token, .{ .key = key }) catch {
+        res.status = 401;
+        return;
+    };
+
+    var result = try conn.queryOpts(
+        "select wu.name as winner, lu.name as loser, g.pointswinner, g.pointsloser from games g " ++
+        "join users wu on g.winner = wu.id join users lu on g.loser = lu.id where wu.name = $1 or lu.name = $1",
+        .{claims_p.value.sub}, .{ .column_names = true });
     defer result.deinit();
 
     var mapper = result.mapper(GameDto, .{});

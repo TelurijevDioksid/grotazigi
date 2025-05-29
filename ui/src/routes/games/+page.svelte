@@ -19,7 +19,7 @@
     });
 
     const getGame = () => {
-        fetch("http://localhost:8080/api/game", { credentials: "include" })
+        fetch("http://localhost:8080/api/game/me", { credentials: "include" })
             .then((res) => {
                 if (res.status === 401) {
                     sessionStorage.removeItem("user");
