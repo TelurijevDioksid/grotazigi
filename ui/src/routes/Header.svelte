@@ -4,23 +4,27 @@
     let user = $state("");
 
     $effect(() => {
-        if (sessionStorage.getItem("user")) {
-            user = sessionStorage.getItem("user")!;
+        const u = sessionStorage.getItem("user");
+        if (u) {
+            user = u;
             return;
         }
-        fetch("http://localhost:8080/api/profile", { credentials: "include" }).then((res) => {
-            if (res.status === 200) {
-                res.json().then((profile: { name: string }) => {
-                    user = profile.name;
-                    sessionStorage.setItem("user", profile.name);
-                })
-            }
-        }).catch(() => {});
+
+        fetch("http://localhost:8080/api/profile", { credentials: "include" })
+            .then((res) => {
+                if (res.status === 200) {
+                    res.json().then((profile: { name: string }) => {
+                        user = profile.name;
+                        sessionStorage.setItem("user", profile.name);
+                    })
+                }
+            })
+            .catch(() => {});
     });
 
     const logout = () => {
         sessionStorage.removeItem("user");
-        fetch("http://localhost:8080/api/logout", { credentials: "include" }).then((res) => {
+        fetch("http://localhost:8080/api/logout", { credentials: "include" }).then(() => {
             user = "";
             window.location.href = "/login";
         });

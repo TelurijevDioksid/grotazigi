@@ -1,10 +1,15 @@
 <script lang="ts">
-    let rooms: { name: string, code: string, players: number, passwordSet: boolean }[] = $state([]);
+    let rooms: {
+        name: string,
+        code: string,
+        players: number,
+        passwordSet: boolean,
+    }[] = $state([]);
     let pattern = $state("");
     let error = $state("");
     let loading = $state(false);
     let roomName = $state("");
-    let roomCode = $state("");
+    let room_code = $state("");
 
     $effect(() => {
         getRooms();
@@ -25,20 +30,22 @@
     const getRooms = () => {
         rooms = [];
         loading = true;
-        fetch("http://localhost:8080/api/rooms", { credentials: "include" }).then(res => {
-            if (res.status === 401) {
-                sessionStorage.removeItem("user");
-                window.location.href = "/login";
-                return;
-            }
-            res.json().then(data => {
-                rooms = data;
+        fetch("http://localhost:8080/api/rooms", { credentials: "include" })
+            .then(res => {
+                if (res.status === 401) {
+                    sessionStorage.removeItem("user");
+                    window.location.href = "/login";
+                    return;
+                }
+                res.json().then(data => {
+                    rooms = data;
+                    loading = false;
+                });
+            })
+            .catch(() => {
+                rooms = [];
                 loading = false;
             });
-        }).catch(() => {
-            rooms = [];
-            loading = false;
-        });
     };
 
     const createRoom = () => {
@@ -73,9 +80,9 @@
 
 <section>
     <div class="input-group mb-3">
-        <input bind:value={roomCode} type="text" class="form-control" placeholder="Kod" />
+        <input bind:value={room_code} type="text" class="form-control" placeholder="Kod" />
         <span class="input-group-text no-pad" id="basic-addon1">
-            <button type="button" onclick={() => joinRoom(roomCode)} class="btn btn-create">Pridruži se</button>
+            <button type="button" onclick={() => joinRoom(room_code)} class="btn btn-create">Pridruži se</button>
         </span>
     </div>
 
@@ -103,8 +110,7 @@
             <div class="spinner-border" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
-        {/if}
-        {#if loading === false}
+        {:else}
             {#each filteredRooms as room}
                 <li>
                     <button class="no-btn" onclick={() => joinRoom(room.code)}>

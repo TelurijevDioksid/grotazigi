@@ -33,14 +33,13 @@
                 error = "Pogresno ime ili lozinka";
             }
         }).catch(() => {
-            error = "Nepozanta greška. Pokušajte kasnije.";
+            error = "Nepozanta greška. Pokušajte kasnije";
         });
     };
 </script>
 
 <svelte:head>
-    <title>Home</title>
-    <meta name="description" content="Grotazigi App" />
+    <title>Login</title>
 </svelte:head>
 
 <section>

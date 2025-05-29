@@ -9,40 +9,37 @@
     let user = $state("");
 
     $effect(() => {
-        getGame();
         const u = sessionStorage.getItem("user");
         if (!u) {
             window.location.href = "/login";
             return;
         }
         user = u;
+        getGame();
     });
 
     const getGame = () => {
-        fetch("http://localhost:8080/api/game", {
-            credentials: "include",
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        }).then((res) => {
-            if (res.status === 401) {
-                sessionStorage.removeItem("user");
-                window.location.href = "/login";
-                return;
-            }
-            res.json().then((data) => {
-                games = data;
-                loading = false;
+        fetch("http://localhost:8080/api/game", { credentials: "include" })
+            .then((res) => {
+                if (res.status === 401) {
+                    sessionStorage.removeItem("user");
+                    window.location.href = "/login";
+                    return;
+                }
+                res.json().then((data) => {
+                    games = data;
+                    loading = false;
+                })
             })
-        }).catch(() => {
-            loading = false;
-        });
+            .catch(() => {
+                loading = false;
+            });
     };
 </script>
 
 <svelte:head>
-    <title>Register</title>
+    <title>Available games</title>
+    <meta name="description" content="Grotazigi App" />
 </svelte:head>
 
 <section>
@@ -53,7 +50,7 @@
     {:else}
         <ul>
             {#each games as game}
-                <li class={game.winner === user ? "win-color" : "lose-color"}> 
+                <li class={game.winner === user ? "win-color" : "lose-color"}>
                     <div style="width: 100%; text-align: start;">{game.winner}</div>
                     <div style="width: 100%; text-align: center;">{game.pointswinner} - {game.pointsloser}</div>
                     <div style="width: 100%; text-align: end;">{game.loser}</div>

@@ -8,7 +8,7 @@
     }
 
     $effect(() => {
-        if (sessionStorage.getItem("user") !== null) {
+        if (sessionStorage.getItem("user")) {
             window.location.href = "/";
         }
     });
@@ -29,7 +29,7 @@
                 window.location.href = "/login";
             }
         }).catch(() => {
-            error = "Greška";
+            error = "Nepoznata greška, pokušajte ponovo kasnije";
         });
     };
 </script>

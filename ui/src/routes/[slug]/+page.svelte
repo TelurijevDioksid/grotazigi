@@ -4,14 +4,6 @@
     import paper_img from "$lib/images/paper.png";
     import scissors_img from "$lib/images/scissors.png";
 
-    interface WsRes {
-        opponent_name: string | null,
-        your_score: number | null,
-        opponent_score: number | null,
-        game_winner: boolean | null,
-        opponent_move: string | null,
-    };
-
     let { data }: PageProps = $props();
     let ws: WebSocket | null = null;
     let opp_name = $state("");
@@ -29,22 +21,21 @@
     $effect(() => {
         loading = true;
 
-        const user = sessionStorage.getItem("user")
-        if (!user) {
+        const u = sessionStorage.getItem("user");
+        if (!u) {
             window.location.href = "/";
+            return;
         }
-        user_name = user!;
+        user_name = u;
 
         if (ws === null) {
             ws = new WebSocket(`ws://localhost:8080/ws?room=${data.roomCode}&user=${user_name}`);
             ws.onclose = wsClose;
             ws.onmessage = (e) => wsMessage(e);
             ws.onopen = wsOpen;
-            ws.onerror = () => {
-                sessionStorage.removeItem("user");
-                window.location.href = "/login";
-            };
+            ws.onerror = wsError;
         }
+
         loading = false;
     });
 
@@ -54,8 +45,19 @@
 
     const wsClose = () => {};
 
+    const wsError = () => {
+        sessionStorage.removeItem("user");
+        window.location.href = "/login";
+    };
+
     const wsMessage = (event: MessageEvent) => {
-        const wsres: WsRes = JSON.parse(event.data);
+        const wsres: {
+            opponent_name: string | null,
+            your_score: number | null,
+            opponent_score: number | null,
+            game_winner: boolean | null,
+            opponent_move: string | null,
+        } = JSON.parse(event.data);
 
         if (wsres.opponent_name !== null) {
             can_play = true;
@@ -109,7 +111,7 @@
 </script>
 
 <svelte:head>
-    <title>Register</title>
+    <title>In game</title>
 </svelte:head>
 
 <section>
@@ -146,28 +148,22 @@
             <div class="you">
                 {#if your_move === 0}
                     <img id="moveimgs" style="opacity: 0;" src={rock_img} alt="rock" />
-                {/if}
-                {#if your_move === 1}
+                {:else if your_move === 1}
                     <img id="moveimgs" src={rock_img} alt="rock" />
-                {/if}
-                {#if your_move === 2}
+                {:else if your_move === 2}
                     <img id="moveimgs" src={paper_img} alt="paper" />
-                {/if}
-                {#if your_move === 3}
+                {:else if your_move === 3}
                     <img id="moveimgs" src={scissors_img} alt="scissors" />
                 {/if}
             </div>
             <div class="opp">
                 {#if opp_move === ""}
                     <img id="moveimgs" style="opacity: 0;" src={rock_img} alt="rock" />
-                {/if}
-                {#if opp_move === "rock"}
+                {:else if opp_move === "rock"}
                     <img id="moveimgs" src={rock_img} alt="rock" />
-                {/if}
-                {#if opp_move === "paper"}
+                {:else if opp_move === "paper"}
                     <img id="moveimgs" src={paper_img} alt="paper" />
-                {/if}
-                {#if opp_move === "scissors"}
+                {:else if opp_move === "scissors"}
                     <img id="moveimgs" src={scissors_img} alt="scissors" />
                 {/if}
             </div>
@@ -175,15 +171,9 @@
     </div>
 
     <div class="controls">
-        <button onclick={() => playMove(1)}>
-            <img src={rock_img} alt="rock" />
-        </button>
-        <button onclick={() => playMove(3)}>
-            <img src={scissors_img} alt="scissors" />
-        </button>
-        <button onclick={() => playMove(2)}>
-            <img src={paper_img} alt="paper" />
-        </button>
+        <button onclick={() => playMove(1)}><img src={rock_img} alt="rock.png" /></button>
+        <button onclick={() => playMove(3)}><img src={scissors_img} alt="scissors.png" /></button>
+        <button onclick={() => playMove(2)}><img src={paper_img} alt="paper.png" /></button>
     </div>
 </section>
 
