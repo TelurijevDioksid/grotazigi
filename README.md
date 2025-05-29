@@ -29,7 +29,7 @@ npm install
 npm run dev
 ```
 
-## API Endpoints
+## API rute
 | Endpoint | Method | Description |
 |---|---|---|
 | /api/register | POST | Registracija novog korisnika |
