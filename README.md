@@ -35,14 +35,23 @@ npm run dev
 | /api/register | POST | Registracija novog korisnika |
 | /api/login | POST | Prijava postojećeg korisnika |
 | /api/logout | GET | Odjava korisnika |
+|---|---|---|
 | /api/profile | GET | Dohvaćanje profila prijavljenog korisnika |
+| /api/user | GET | Dohvaćanje svih korisnika |
+| /api/user/:id | GET | Dohvaćanje korisnika po ID-u |
+| /api/user | POST | Kreiranje novog korisnika |
+| /api/user/:id | PUT | Ažuriranje korisnika po ID-u |
+| /api/user/:id | DELETE | Brisanje korisnika po ID-u |
+|---|---|---|
 | /api/rooms | GET | Dohvaćanje svih soba |
 | /api/rooms | POST | Kreiranje nove sobe |
-| /api/game | GET | Dohvaćanje svih igara |
-| /api/game/:id | GET | Dohvaćanje igre po ID-u |
+|---|---|---|
+| /api/game | GET | Dohvaćanje odigranih igara |
+| /api/game/:id | GET | Dohvaćanje odigrane igre po ID-u |
 | /api/game | POST | Kreiranje nove igre |
 | /api/game/:id | PUT | Ažuriranje igre po ID-u |
 | /api/game/:id | DELETE | Brisanje igre po ID-u |
+|---|---|---|
 | /ws | GET | WebSocket endpoint za igru |
 
 ## UI rute
