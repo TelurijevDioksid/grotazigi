@@ -1,37 +1,16 @@
 const std = @import("std");
 const httpz = @import("httpz");
-const hlr = @import("handler.zig");
-const UUID = @import("uuid.zig").UUID;
-const jwt = @import("jwt.zig");
+const hlr = @import("../handler.zig");
+const jwt = @import("../helpers/jwt.zig");
+const UUID = @import("../helpers/uuid.zig").UUID;
+const User = @import("../models/user.zig").User;
+const RegisterDto = @import("../models/user.zig").RegisterDto;
+const LoginDto = @import("../models/user.zig").LoginDto;
+const JwtPayload = @import("../models/user.zig").JwtPayload;
+
 const crypto = std.crypto;
 const base64url = std.base64.url_safe_no_pad;
-
 const Handler = hlr.Handler;
-
-pub const User = struct {
-    id: []const u8,
-    name: []const u8,
-    password: []const u8,
-    salt: []const u8,
-    admin: bool,
-};
-const RegisterDto = struct {
-    name: []const u8,
-    password: []const u8,
-};
-
-const LoginDto = struct {
-    name: []const u8,
-    password: []const u8,
-};
-
-pub const JwtPayload = struct {
-    iss: []const u8,
-    exp: i64,
-    sub: []const u8,
-    aud: []const u8,
-    admin: bool,
-};
 
 pub fn login(handler: *Handler, req: *httpz.Request, res: *httpz.Response) !void {
     if (try req.json(LoginDto)) |user| {

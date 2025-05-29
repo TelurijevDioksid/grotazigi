@@ -1,34 +1,15 @@
 const std = @import("std");
 const httpz = @import("httpz");
-const hlr = @import("handler.zig");
-const UUID = @import("uuid.zig").UUID;
-const jwt = @import("jwt.zig");
-const JwtPayload = @import("auth.zig").JwtPayload;
+const hlr = @import("../handler.zig");
+const UUID = @import("../helpers/uuid.zig").UUID;
+const jwt = @import("../helpers/jwt.zig");
+const JwtPayload = @import("../models/user.zig").JwtPayload;
+const UserDto = @import("../models/user.zig").UserDto;
+const ProfileDto = @import("../models/user.zig").ProfileDto;
+const CreateUserDto = @import("../models/user.zig").CreateUserDto;
+const UpdateUserDto = @import("../models/user.zig").UpdateUserDto;
 
 const Handler = hlr.Handler;
-
-const UserDto = struct {
-    id: []const u8,
-    name: []const u8,
-    password: []const u8,
-    salt: []const u8,
-};
-
-const ProfileDto = struct {
-    name: []const u8,
-};
-
-const CreateUserDto = struct {
-    name: []const u8,
-    password: []const u8,
-    salt: []const u8,
-};
-
-const UpdateUserDto = struct {
-    name: ?[]const u8,
-    password: ?[]const u8,
-    salt: ?[]const u8,
-};
 
 pub fn getProfile(handler: *Handler, req: *httpz.Request, res: *httpz.Response) !void {
     const token = req.cookies().get("auth").?;
@@ -49,7 +30,6 @@ pub fn getProfile(handler: *Handler, req: *httpz.Request, res: *httpz.Response) 
     defer row.deinit() catch {};
 
     const user = try row.to(ProfileDto, .{});
-
     try res.json(user, .{});
 }
 
@@ -61,7 +41,6 @@ pub fn getUsers(handler: *Handler, _: *httpz.Request, res: *httpz.Response) !voi
     defer result.deinit();
 
     var mapper = result.mapper(UserDto, .{});
-
     var users = std.ArrayList(UserDto).init(res.arena);
     defer users.deinit();
 
@@ -96,7 +75,6 @@ pub fn getUser(handler: *Handler, req: *httpz.Request, res: *httpz.Response) !vo
         }, .{});
         return;
     };
-
     try res.json(user, .{});
 }
 
@@ -106,7 +84,6 @@ pub fn createUser(handler: *Handler, req: *httpz.Request, res: *httpz.Response) 
         defer handler.pool.release(conn);
 
         const id = UUID.init();
-
         const result = try conn.exec(
             "insert into users (id, name, password, salt, admin) values ($1, $2, $3, $4, $5)",
             .{ id, user.name, user.password, user.salt, false });
@@ -171,7 +148,6 @@ pub fn updateUser(handler: *Handler, req: *httpz.Request, res: *httpz.Response) 
             return;
         }
     }
-
     res.status = 400;
     try res.json(.{
         .message = "Invalid request body",

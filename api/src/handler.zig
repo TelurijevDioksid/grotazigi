@@ -1,62 +1,19 @@
 const std = @import("std");
 const pg = @import("pg");
 const httpz = @import("httpz");
-const jwt = @import("jwt.zig");
-const UUID = @import("uuid.zig").UUID;
-const JwtPayload = @import("auth.zig").JwtPayload;
+const jwt = @import("helpers/jwt.zig");
+const UUID = @import("helpers/uuid.zig").UUID;
+const JwtPayload = @import("models/user.zig").JwtPayload;
+const Room = @import("models/room.zig").Room;
+const RoomError = @import("models/errors.zig").RoomError;
+const Move = @import("models/websock.zig").Move;
+const WsMessage = @import("models/websock.zig").WsMessage;
+const WsResponse = @import("models/websock.zig").WsResponse;
 
 const Allocator = std.mem.Allocator;
 const json = std.json;
 const websocket = httpz.websocket;
 const base64url = std.base64.url_safe_no_pad;
-
-const Room = struct {
-    name: []const u8,
-    code: []const u8,
-    winner: u8 = 0,
-    client1_conn: ?*websocket.Conn = null,
-    client2_conn: ?*websocket.Conn = null,
-    client1_name: ?[]const u8 = null,
-    client2_name: ?[]const u8 = null,
-
-    client1_move: ?Move = null,
-    client2_move: ?Move = null,
-    client1_score: u8 = 0,
-    client2_score: u8 = 0,
-
-    pub fn deinit(self: Room, allocator: Allocator) void {
-        if (self.client1_name) |name_slice| allocator.free(name_slice);
-        if (self.client2_name) |name_slice| allocator.free(name_slice);
-    }
-};
-
-const Move = enum(u8) {
-    rock = 1,
-    paper = 2,
-    scissors = 3,
-};
-
-const WsMessage = struct {
-    move: Move,
-};
-
-const WsResponse = struct {
-    opponent_name: ?[]const u8 = null,
-    your_score: ?u8 = null,
-    opponent_score: ?u8 = null,
-    game_winner: ?bool = null,
-    opponent_move: ?Move = null,
-};
-
-pub const RoomError = error{
-    RoomExists,
-    RoomNotFound,
-    RoomFull,
-    RoomUnmarshalError,
-    RoomSamePlayer,
-    RoomServerError,
-    RoomPasswordError,
-};
 
 pub const RoomManager = struct {
     allocator: Allocator,
@@ -247,6 +204,7 @@ pub const RoomManager = struct {
                 .opponent_score = 0,
             }) catch {};
         }
+
         self.storeRoomInDb(room, client.app_handler) catch return;
         self.roomCleanup(room.code);
     }
@@ -291,6 +249,7 @@ pub const RoomManager = struct {
             defer self.allocator.free(query);
             _ = try conn.exec(query, .{});
         }
+        std.debug.print("\nSTRED IN DB CHECKPOINT storeRoomInDb\n", .{});
     }
 
     fn roomCleanup(self: *RoomManager, code: []const u8) void {
@@ -303,18 +262,12 @@ pub const RoomManager = struct {
     fn sendMessage(self: *RoomManager, conn: *websocket.Conn, res: WsResponse) RoomError!void {
         var buff = std.ArrayList(u8).init(self.allocator);
         defer buff.deinit();
-        json.stringify(res, .{}, buff.writer()) catch {
-            return RoomError.RoomServerError;
-        };
-        conn.write(buff.items) catch {
-            return RoomError.RoomServerError;
-        };
+        json.stringify(res, .{}, buff.writer()) catch { return RoomError.RoomServerError; };
+        conn.write(buff.items) catch { return RoomError.RoomServerError; };
     }
 
     fn determineWinner(move1: Move, move2: Move) ?bool {
-        if (move1 == move2) {
-            return null;
-        }
+        if (move1 == move2) return null;
         return switch (move1) {
             .rock => move2 == .scissors,
             .paper => move2 == .rock,
@@ -460,8 +413,5 @@ pub const WsClient = struct {
         self.app_handler.room_manager.leaveRoom(self);
         self.deinit();
     }
-
-    // pub fn clientClose(self: *WsClient, _: []u8) !void {
-        // try self.app_handler.room_manager.leaveRoom(self);
-    // }
 };
+

@@ -1,18 +1,10 @@
 const std = @import("std");
 const httpz = @import("httpz");
-const handler = @import("handler.zig");
+const handler = @import("../handler.zig");
+const RoomDto = @import("../models/room.zig").RoomDto;
+const CreateRoomDto = @import("../models/room.zig").CreateRoomDto;
 
 const Handler = handler.Handler;
-
-const RoomDto = struct {
-    name: []const u8,
-    code: []const u8,
-    players: u8,
-};
-
-const CreateRoomDto = struct {
-    name: []const u8,
-};
 
 pub fn getRooms(app_handler: *Handler, _: *httpz.Request, res: *httpz.Response) !void {
     var rooms = std.ArrayList(RoomDto).init(res.arena);

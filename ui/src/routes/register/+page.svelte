@@ -27,7 +27,9 @@
         }).then((res) => {
             if (res.status === 201) {
                 window.location.href = "/login";
+                return;
             }
+            res.text().then((text) => error = text);
         }).catch(() => {
             error = "Nepoznata greška, pokušajte ponovo kasnije";
         });

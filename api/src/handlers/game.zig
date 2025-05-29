@@ -1,30 +1,12 @@
 const std = @import("std");
 const httpz = @import("httpz");
-const hlr = @import("handler.zig");
-const UUID = @import("uuid.zig").UUID;
+const hlr = @import("../handler.zig");
+const UUID = @import("../helpers/uuid.zig").UUID;
+const GameDto = @import("../models/game.zig").GameDto;
+const CreateGameDto = @import("../models/game.zig").CreateGameDto;
+const UpdateGameDto = @import("../models/game.zig").UpdateGameDto;
 
 const Handler = hlr.Handler;
-
-const GameDto = struct {
-    winner: []const u8,
-    loser: []const u8,
-    pointswinner: i32,
-    pointsloser: i32,
-};
-
-const CreateGameDto = struct {
-    winner: []const u8,
-    loser: []const u8,
-    pointswinner: i32,
-    pointsloser: i32,
-};
-
-const UpdateGameDto = struct {
-    winner: ?[]const u8,
-    loser: ?[]const u8,
-    pointswinner: ?i32,
-    pointsloser: ?i32,
-};
 
 pub fn getGames(handler: *Handler, _: *httpz.Request, res: *httpz.Response) !void {
     const conn = try handler.pool.acquire();
@@ -37,7 +19,6 @@ pub fn getGames(handler: *Handler, _: *httpz.Request, res: *httpz.Response) !voi
     defer result.deinit();
 
     var mapper = result.mapper(GameDto, .{});
-
     var games = std.ArrayList(GameDto).init(res.arena);
 
     while (try mapper.next()) |game| {
@@ -64,8 +45,7 @@ pub fn getGame(handler: *Handler, req: *httpz.Request, res: *httpz.Response) !vo
     var row = try conn.rowOpts(
         "select wu.name as winner, lu.name as loser, g.pointswinner, g.pointsloser from games g " ++
         "join users wu on g.winner = wu.id join users lu on g.loser = lu.id where g.id = $1",
-        .{id}, .{ .column_names = true })
-    orelse {
+        .{id}, .{ .column_names = true }) orelse {
         res.status = 404;
         try res.json(.{
             .message = "Game not found",
@@ -116,7 +96,6 @@ pub fn createGame(handler: *Handler, req: *httpz.Request, res: *httpz.Response) 
         }
 
         const id = UUID.init();
-
         const result = try conn.exec(
             "insert into games (id, winner, loser, pointswinner, pointsloser ) values ($1, $2, $3, $4, $5, $6)",
             .{ id, game.winner, game.loser, game.pointswinner, game.pointsloser },);

@@ -1,14 +1,13 @@
 const std = @import("std");
 const pg = @import("pg");
 const httpz = @import("httpz");
-const jwt = @import("jwt.zig");
-
-const UUID = @import("uuid.zig").UUID;
-const user = @import("user.zig");
 const handler = @import("handler.zig");
-const auth = @import("auth.zig");
-const room = @import("room.zig");
-const game = @import("game.zig");
+const jwt = @import("helpers/jwt.zig");
+const UUID = @import("helpers/uuid.zig").UUID;
+const user = @import("handlers/user.zig");
+const auth = @import("handlers/auth.zig");
+const room = @import("handlers/room.zig");
+const game = @import("handlers/game.zig");
 
 const Allocator = std.mem.Allocator;
 const Handler = handler.Handler;
@@ -68,28 +67,21 @@ pub fn main() !void {
     router.post("/api/user", user.createUser, .{});
     router.put("/api/user/:id", user.updateUser, .{});
     router.delete("/api/user/:id", user.deleteUser, .{});
-
     router.get("/api/profile", user.getProfile, .{});
-
     router.post("/api/register", auth.register, .{});
     router.post("/api/login", auth.login, .{});
     router.get("/api/logout", auth.logout, .{});
-
     router.get("api/rooms", room.getRooms, .{});
     router.post("api/rooms", room.createRoom, .{});
-
     router.get("/api/game", game.getGames, .{});
     router.get("/api/game/:id", game.getGame, .{});
     router.post("/api/game", game.createGame, .{});
     router.put("/api/game/:id", game.updateGame, .{});
     router.delete("/api/game/:id", game.deleteGame, .{});
-
     router.get("/ws", ws, .{});
 
     std.debug.print("Listening on port 8080\n", .{});
-
     server_instance = &server;
-
     try server.listen();
 }
 
